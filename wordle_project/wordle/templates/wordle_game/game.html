@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .game-form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .guess-input {
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 18px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+            outline: none;
+        }
+        .guess-submit {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-right: auto;
+        }
+        .guess-submit:hover {
+            background-color: #45a049;
+        }
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .guess-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .guess-item {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 5px;
+        }
+        .letter-box {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 2px;
+            border-radius: 4px;
+        }
+        .correct-position {
+            background-color: #4CAF50; /* Green for correct letter in correct position */
+            color: white;
+        }
+        .correct-letter {
+            background-color: yellow; /* Yellow for correct letter in wrong position */
+            color: black;
+        }
+        .incorrect-letter {
+            background-color: #ccc; /* Grey for incorrect letter */
+            color: white;
+        }
+        .attempts-info {
+            text-align: center;
+            margin-top: 20px;
+        }
+        @keyframes scale {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .animated {
+            animation: scale 0.5s ease-in-out;
+        }
+        .restart-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: block;
+            margin: 20px auto;
+        }
+        .restart-button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wordle Game</h1>
+
+        <div class="game-form">
+            {% if invalid_word_message %}
+                <p class="error-message">{{ invalid_word_message }}</p>
+            {% endif %}
+            <form method="post" class="guess-form">
+                {% csrf_token %}
+                {{ form.guess.errors }}
+                <input type="text" name="guess" class="guess-input" placeholder="Enter your guess" autofocus required {% if game_over %}disabled{% endif %}>
+                <button type="submit" class="guess-submit" {% if game_over %}disabled{% endif %}>Submit Guess</button>
+            </form>
+
+            {% if guesses %}
+                <h2>Guesses:</h2>
+                <ul class="guess-list">
+                    {% for guess in guesses %}
+                        <li class="guess-item animated">
+                            {% for letter, correct_letter, correct_position in guess.guess_info %}
+                                <div class="letter-box {% if correct_position %}correct-position{% elif correct_letter %}correct-letter{% else %}incorrect-letter{% endif %}">
+                                    {{ letter }}
+                                </div>
+                            {% endfor %}
+                        </li>
+                    {% endfor %}
+                </ul>
+                <p class="attempts-info">Attempts: {{ guesses|length }} / 6</p>
+            {% endif %}
+
+            {% if game_over %}
+                <p class="game-over-message">Game Over! The correct word was "{{ active_word }}".</p>
+                <form method="post" action="{% url 'restart_game' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="restart-button">Restart Game</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
